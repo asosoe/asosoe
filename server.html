@@ -1,0 +1,179 @@
+<head>
+	<meta charset="utf-8" />
+	<title>Development</title>
+	<script>
+// ---------------------------------------------------------------
+// 티켓링크
+    var keysToDownload = [];
+
+function startWait() {
+  // 사용자가 입력한 공연코드 값을 가져옵니다.
+  const 공연코드 = document.getElementById('공연코드입력').value;
+
+  var netfunnel = new XMLHttpRequest();
+  netfunnel.onreadystatechange = function() {
+    if (netfunnel.readyState === netfunnel.DONE) {
+      if (netfunnel.status === 200 || netfunnel.status === 201) {
+        var respon = netfunnel.responseText;
+        var codeIndex = respon.indexOf(":") + 1;
+        var code = respon.substr(codeIndex, 3);
+        document.getElementById("code").value = code;
+        var nwaitIndex = respon.indexOf("nwait=") + 6;
+        var keyIndex = respon.indexOf("key=") + 4;
+        var nextIndex = respon.indexOf("&nnext");
+        document.getElementById("nwait").value = respon.substr(nwaitIndex, nextIndex - nwaitIndex);
+        var key = respon.substr(keyIndex, nwaitIndex - 6 - keyIndex - 1);
+        document.getElementById("key").value = key;
+        if (code === "200" && document.getElementById("nwait").value === "0") {
+          keysToDownload.push(key); // key 값을 배열에 저장
+        }
+        if (code != "200" && code != "201") {
+          startWait();
+          return 0;
+        }
+        setTimeout(() => refreshKey(document.getElementById("key").value), 500);
+      } else if (netfunnel.status === 0) {
+        alert("CORS 오류 발생 확장 기능 설치 및 활성화 여부를 확인하고, 확장 기능의 Reload active tab을 눌러 본 페이지를 다시 로드해주세요.");
+      } else {
+        alert("확인되지 않은 오류 발생!! 인터넷 연결 상태를 확인하세요.");
+      }
+    }
+  };
+
+  // 공연코드 값을 적용한 URL을 생성합니다.
+  var keyUrl = `https://wait.ticketlink.co.kr/ts.wseq?opcode=5101&nfid=0&prefix=NetFunnel.gRtype=5101;&sid=service_1&aid=act_${공연코드}&js=yes`;
+  netfunnel.open("GET", keyUrl);
+  netfunnel.send();
+}
+
+function saveKeysToFile() {
+  if (keysToDownload.length > 0) {
+    var keysText = keysToDownload.join('\n\n'); // 키 값을 2줄씩 줄바꿈으로 구분하여 문자열 생성
+    var filePath = 'C:\\Users\\asoso\\OneDrive\\바탕 화면\\workspace\\netfunnel_key.txt'; // 저장할 파일 경로 및 이름
+    var blob = new Blob([keysText], { type: 'text/plain' });
+    var link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = 'netfunnel_key.txt';
+    link.click();
+    keysToDownload = []; // 배열 초기화
+  } else {
+    alert("No keys to download.");
+  }
+}
+// ---------------------------------------------------------------
+// 인터파크티켓
+function saveurl() {
+      // 입력된 공연 코드와 날짜 가져오기
+      var groupCode = document.getElementById('groupcode').value;
+      var playDate = document.getElementById('groupdate').value;
+
+      // 링크 생성
+      var baseUrl = 'https://poticket.interpark.com/Book/BookSession.asp';
+      var params = new URLSearchParams({
+        GroupCode: groupCode,
+        PlayDate: playDate,
+        PlaySeq: '001',
+        Tiki: '',
+        Point: '',
+        WynsCode: groupCode + '/4934243ff56fdb77749fbaf5b7267e17.886394251171090432',
+        WynsGateID: 'gate-e'
+      });
+
+      var url = baseUrl + '?' + params.toString();
+
+      // 링크값 요소에 링크 표시
+      document.getElementById('url').value = url;
+    }
+   
+    function copyUrl() {
+      // 링크값 요소 선택 및 복사
+      var urlElement = document.getElementById('url');
+      urlElement.select();
+      document.execCommand('copy');
+      alert('링크가 복사되었습니다.');
+    }
+// ---------------------------------------------------------------
+// 예스24티켓
+
+function copyCode() {
+      var yes24code = document.getElementById("yes24code").value;
+      var code = `
+        var url = 'http://ticket.yes24.com/Pages/Perf/Sale/PerfSaleProcess.aspx?IdPerf=${yes24code}';
+
+        var form = $("form");
+
+        var target = 'pop_perfsale';
+
+        window.open(url, target, "width=1000,height=700,resizable=yes,toolbar=yes,menubar=yes,location=yes");
+
+        form.attr('action', url);
+        form.attr('target', target);
+        form.attr('method', 'post');
+
+        var hiddenField = document.createElement("input");
+        hiddenField.setAttribute("type", "hidden");
+        hiddenField.setAttribute("name", "netfunnel_key");
+        hiddenField.setAttribute("value", '98101ACAE766BA0C2154260E7C3688342B0D12C5896A939D497D3C897DD51C6F32288BE9C9366ADD419DCF8E8D7D5DE0CB26B51D238F2F58F82E33AF8C55E6386655B0EE44D6716BC20D6C5DBE0AB4B994DF308C5F6406D15A8E7B1D28AE771062C3554845A2740F53702516EF5437F2C302C30');
+
+        form.append(hiddenField);
+        document.body.append(form);
+        form.submit();
+      `;
+
+      navigator.clipboard.writeText(code)
+        .then(function() {
+          alert("코드가 복사되었습니다!");
+        })
+        .catch(function(error) {
+          console.error("복사에 실패했습니다.", error);
+        });
+    }
+	</script>
+</head>
+<body>
+	<h1>공연 사이트 별 예매 방법</h1>
+  <h2>-------------------------------------------------------------</h2>
+  <h2>티켓링크 (대기열 무시)</h2>
+	<h3>대기열 시작을 예매시작 시간 전에 미리 누르셔야 합니다.</h3>
+	<h3>사용 전 <a href="https://chrome.google.com/webstore/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf?hl=ko">Allow CORS</a>를 설치하고 활성화 하세요.</h3>
+	<h4>아래 nwait 값이 0이 아니거나 code 값이 200, 201이 아닐 때의 키를 사용하시면 안됩니다.</h4>
+	<h5>정상적으로 작동한다면 아래 Netfunnel_Key 값이 표시됩니다.</h5>
+  <h5>값이 나타나지 않는 경우는 대기열이 아직 시작되지 않았거나 없는 공연코드 입니다.</h5>
+  
+    <input type="text" id="공연코드입력" placeholder="공연코드를 입력하세요.">
+    <button onclick="startWait()">대기열 시작</button><br>
+
+    nwait : <input type="text" id="nwait" value="" disabled><br>
+	  code : <input type="text" id="code" value="" disabled><br>
+		Netfunnel_Key : <input type="text" id="key" name="nfKey" value="" size=300><br><br>
+
+  <button onclick="saveKeysToFile()">메모장 저장</button><br>
+  <h5>사용법</h5>
+  <h5>준비물 : Burp Suite, Burp CA 인증서 설치, SwitchyOmega (크롬 확장 프로그램)</h5>
+  <h5>1. "Burp와 Omega에서 127.0.0.1:포트번호"로 Proxy를 설정하세요</h5>
+  <h5>2. "Proxy settings" -> "Request interception rules" -> "Add" -> "wait.ticketlink.co.kr" 추가 하기</h5>
+  <h5>3. "https://www.ticketlink.co.kr/reserve/product/공연코드" 에 접속하고, 대기열이 뜨면 "intercept is on" 클릭 </h5>
+  <h5>4. 해당 Netfunnel_Key를 "/ts.wseq?opcode=5003&key="Netfunnel_Key" 여기에 붙여넣고 Forward 하세요.</h5>
+  <h5>※ 크롬 여러 창에서 사용하고 싶으면 각각 포트번호를 다르게 설정하세요.</h5>
+
+  <h2>-------------------------------------------------------------</h2>
+  <h2>인터파크 (직링)</h2>
+
+  공연코드 : <input type="text" id="groupcode" placeholder="공연코드를 입력하세요." ><br>
+  공연날짜 : <input type="text" id="groupdate" placeholder="공연날짜를 입력하세요." ><br><br>
+  <button onclick="saveurl()">적용</button><br><br>
+  링크 : <input type="text" id="url" name="interpark_url" value="" size=300 ><br><br>
+  <button onclick="copyUrl()">복사</button><br>
+  <h5>사용법</h5>
+  <h5>1. "ticket.interpark.com" 로그인 하세요. </h5>
+  <h5>2. 로그인 후 메인화면에서 복사한 링크를 붙여넣고 실행하세요.</h5>
+
+  <h2>-------------------------------------------------------------</h2>
+  <h2>YES24 (콘솔)</h2>
+
+  공연코드 : <input type="text" id="yes24code" placeholder="공연코드를 입력하세요."><br><br>
+  <button onclick="copyCode()">저장 및 복사</button><br>
+  <h5>사용법</h5>
+  <h5>1. "ticket.yes24.com" 로그인 하세요. </h5>
+  <h5>2. 로그인 후 메인 화면에서 Ctrl + Shift + I (개발자 모드)로 들어가세요.</h5>
+  <h5>3. Console 창에 들어가서 복사한 코드를 붙여놓고 실행하세요.</h5>
